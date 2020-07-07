@@ -27,20 +27,22 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPARKFUN_QWIIC_DUAL_ENCODER_READER_ARDUINO_LIBRARY_H
-#define _SPARKFUN_QWIIC_DUAL_ENCODER_READER_ARDUINO_LIBRARY_H
-#include "Arduino.h"
+#ifndef _SPARKFUN_PRODRIVER_TC78H670FTG_ARDUINO_LIBRARY_H
+#define _SPARKFUN_PRODRIVER_TC78H670FTG_ARDUINO_LIBRARY_H
 
-#define PRODRIVER_MODE_CLOCKIN 0 
-#define PRODRIVER_MODE_SERIAL 1
-
+// default Arduino digital pin numbers
 #define PRODRIVER_DEFAULT_PIN_MODE_0 0
 #define PRODRIVER_DEFAULT_PIN_MODE_1 1
 #define PRODRIVER_DEFAULT_PIN_MODE_2 2
 #define PRODRIVER_DEFAULT_PIN_MODE_3 3
 #define PRODRIVER_DEFAULT_PIN_EN     4
 #define PRODRIVER_DEFAULT_PIN_STBY   5
+#define PRODRIVER_DEFAULT_PIN_ERROR  6
 
+// step resolution modes. 
+// These are used to set the MODE PINS (0:3) during begin 
+// to "bootup" the driver IC in the desired mode.
+// see datasheet pg 8
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_2 1
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_4 2
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_8 3
@@ -48,7 +50,6 @@
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_32 5
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_64 6
 #define PRODRIVER_STEP_RESOLUTION_VARIABLE_1_128 7
-
 #define PRODRIVER_STEP_RESOLUTION_FIXED_FULL 8
 #define PRODRIVER_STEP_RESOLUTION_FIXED_1_2 9
 #define PRODRIVER_STEP_RESOLUTION_FIXED_1_4 10
@@ -58,25 +59,60 @@
 #define PRODRIVER_STEP_RESOLUTION_FIXED_1_64 14
 #define PRODRIVER_STEP_RESOLUTION_FIXED_1_128 15
 
+// step resolution options
+// note, these are limited by which mode you choose.
+#define PRODRIVER_STEP_RESOLUTION_1_1 1
+#define PRODRIVER_STEP_RESOLUTION_1_2 2
+#define PRODRIVER_STEP_RESOLUTION_1_4 4
+#define PRODRIVER_STEP_RESOLUTION_1_8 8
+#define PRODRIVER_STEP_RESOLUTION_1_16 16
+#define PRODRIVER_STEP_RESOLUTION_1_32 32
+#define PRODRIVER_STEP_RESOLUTION_1_64 64
+#define PRODRIVER_STEP_RESOLUTION_1_128 128
+
+
+//  Setting options for commInterface
+#define PRODRIVER_MODE_CLOCKIN 0 
+#define PRODRIVER_MODE_SERIAL 1
+
+//  PRODRIVERSettings
+//
+//  This is used by the PRODRIVER class to hold settings.  It is public within that class
+//  and the user is expected to write desired values into the settings before calling
+//  .begin();
+struct PRODRIVERSettings
+{
+  public:
+	
+  //Main control mode and pin number variables
+    uint8_t controlMode;  //Set equal to PRODRIVER_MODE_CLOCKIN or PRODRIVER_MODE_SERIAL
+    uint8_t stepResolutionMode; // only used if in CLOCKIN mode, otherwise ignored
+    uint8_t stepResolution; // active resolution within bounds set by stepResolutionMode
+    uint8_t mode0Pin;
+    uint8_t mode1Pin;
+    uint8_t mode2Pin;
+    uint8_t mode3Pin;
+    uint8_t enablePin;
+    uint8_t standbyPin;
+    uint8_t errorPin;
+};
+
 class PRODRIVER
 {
 public:
-  PRODRIVER();
+  //settings
+  PRODRIVERSettings settings;
 
-  boolean begin(boolean mode = PRODRIVER_MODE_CLOCKIN, 
-                uint8_t stepResolution = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_2,
-                uint8_t standByPin = PRODRIVER_DEFAULT_PIN_STBY, 
-                uint8_t enablePin = PRODRIVER_DEFAULT_PIN_EN, 
-                uint8_t modePin0 = PRODRIVER_DEFAULT_PIN_MODE_0, 
-                uint8_t modePin1 = PRODRIVER_DEFAULT_PIN_MODE_1, 
-                uint8_t modePin2 = PRODRIVER_DEFAULT_PIN_MODE_2, 
-                uint8_t modePin3 = PRODRIVER_DEFAULT_PIN_MODE_3
-                );
+	//Constructor generates default PRODRIVERSettings.
+  PRODRIVER( void );
 
-  boolean isError();
-  
+  boolean begin( void ); // Call to apply PRODRIVERSettings and returns ERR stat
+  boolean errorStat( void );
+  boolean step(uint16_t steps = 0, boolean direction = 0); // returns ERR stat
+  boolean changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
+
 private:
-
+  boolean pinSetup();
 };
 
 #endif

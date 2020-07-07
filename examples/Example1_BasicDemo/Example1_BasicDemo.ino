@@ -16,14 +16,19 @@
 */
 
 #include "SparkFun_ProDriver_TC78H670FTG_Arduino_Library.h" //Click here to get the library: http://librarymanager/All#SparkFun_ProDriver
-PRODRIVER drive; //Create instance of this object
+PRODRIVER myProDriver; //Create instance of this object
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("SparkFun ProDriver TC78H670FTG Example 1");
+
+  myProDriver.begin(); // default settings
 
 }
 
 void loop() {
+
+  myProDriver.step(200);
+  delay(1000);
 
 }

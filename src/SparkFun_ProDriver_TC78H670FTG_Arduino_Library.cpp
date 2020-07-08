@@ -29,6 +29,7 @@
 
 #include "SparkFun_ProDriver_TC78H670FTG_Arduino_Library.h"
 #include "Arduino.h"
+#include <stdint.h>
 
 //****************************************************************************//
 //
@@ -57,7 +58,7 @@ PRODRIVER::PRODRIVER( void )
 
 //Initializes the motor driver with basic settings
 //Returns false if error is detected (i.e. ERR pin is pulled low by the IC)
-boolean PRODRIVER::begin( void )
+bool PRODRIVER::begin( void )
 {
   pinSetup(); // sets arduino pins to necessary initial pinModes and statuses
   controlModeSelect(); // "boots up" IC with correct statuses on MODE pins
@@ -67,7 +68,7 @@ boolean PRODRIVER::begin( void )
 
 // pinSetup( void )
 // setup Arduino pins as inputs/outputs as needed, and to default settings (disabled, standby)
-boolean PRODRIVER::pinSetup( void )
+bool PRODRIVER::pinSetup( void )
 {
   // standby is active low. 
   // OUTPUT, LOW = standby
@@ -105,7 +106,7 @@ boolean PRODRIVER::pinSetup( void )
 // Must be in standby mode.
 // Mode pins must be set to desired mode, then standby must be released.
 // see datasheet pg 6
-boolean PRODRIVER::controlModeSelect( void )
+bool PRODRIVER::controlModeSelect( void )
 {
   // set mode pins according to desired mode
   switch (settings.controlMode)
@@ -161,7 +162,7 @@ boolean PRODRIVER::controlModeSelect( void )
 // Motor Load Open (OPD)
 // returns true if things are good and there is no error detected
 
-boolean PRODRIVER::errorStat( void )
+bool PRODRIVER::errorStat( void )
 {
   if(digitalRead(settings.errorPin) == true)
   {
@@ -171,21 +172,21 @@ boolean PRODRIVER::errorStat( void )
   // false means error!
 }
 
-// step( uint16_t steps, boolean direction )
+// step( uint16_t steps, bool direction )
 // step the motor a set amount of steps at the desired direction
 // will stop if error is detected during stepping
 // retuns errorStat()
 
-boolean PRODRIVER::step( uint16_t steps, boolean direction)
+bool PRODRIVER::step( uint16_t steps, bool direction)
 {
-  // set CW-CWW pin (aka mode3pin) to the desired direction
+  // set CW-CWW pin (aka mode3Pin) to the desired direction
   // CW-CCW pin controls the rotation direction of the motor. 
   // When set to H, the current of OUT_A is output first, with a phase difference of 90°. 
   // When set to L, the current of OUT_B is output first with a phase difference of 90°
-  digitalWrite(settings.mode3pin, direction);
+  digitalWrite(settings.mode3Pin, direction);
   
   // step the motor the desired amount of steps
-  // each up-edge of the CLK signal (aka mode2pin) 
+  // each up-edge of the CLK signal (aka mode2Pin) 
   // will shift the motor's electrical angle per step.
   for(uint16_t i = 0 ; i < steps ; i++)
   {
@@ -202,7 +203,7 @@ boolean PRODRIVER::step( uint16_t steps, boolean direction)
 // Step resolution can be set by SET_EN pin and UP-DW pin. 
 // Step mode is changed synchronously with Step Clock. 
 // see datasheet pg 9
-boolean PRODRIVER::changeStepResolution( uint8_t resolution)
+bool PRODRIVER::changeStepResolution( uint8_t resolution)
 {
   // If user asks to change resolution, but we are already there, then
   // just return errorStat()
@@ -211,16 +212,16 @@ boolean PRODRIVER::changeStepResolution( uint8_t resolution)
 
   // convert pin names to CLOCKIN specific names
   // (for ease of programming)
-  uint8_t setEn = settings.mode1pin
-  uint8_t updw = settings.mode0pin
-  uint8_t clock = settings.mode2pin
+  uint8_t setEn = settings.mode1Pin;
+  uint8_t updw = settings.mode0Pin;
+  uint8_t clock = settings.mode2Pin;
 
   // setup pins for a new step resolution change
     digitalWrite(clock, HIGH);
     digitalWrite(setEn, HIGH);
 
   // find out how many shifts we need in either direction.
-  uint8_t shifts = 0;
+  uint8_t shift = 0;
 
   // resolution and settings.stepResolution actually are the divisor of the step resolution fraction,
   // so we can compare the two to find out whether we need to "upshift" or "downshift"
@@ -238,13 +239,13 @@ boolean PRODRIVER::changeStepResolution( uint8_t resolution)
     digitalWrite(updw, LOW);
   }
   else{ // we are moding to lower resolution
-    if ( (settings.resolution / 2) == resolution ) shift = 1;
-    else if ( (settings.resolution / 4) == resolution ) shift = 2;
-    else if ( (settings.resolution / 8) == resolution ) shift = 3;
-    else if ( (settings.resolution / 16) == resolution ) shift = 4;
-    else if ( (settings.resolution / 32) == resolution ) shift = 5;
-    else if ( (settings.resolution / 64) == resolution ) shift = 6;
-    else if ( (settings.resolution / 128) == resolution ) shift = 7;
+    if ( (settings.stepResolution / 2) == resolution ) shift = 1;
+    else if ( (settings.stepResolution / 4) == resolution ) shift = 2;
+    else if ( (settings.stepResolution / 8) == resolution ) shift = 3;
+    else if ( (settings.stepResolution / 16) == resolution ) shift = 4;
+    else if ( (settings.stepResolution / 32) == resolution ) shift = 5;
+    else if ( (settings.stepResolution / 64) == resolution ) shift = 6;
+    else if ( (settings.stepResolution / 128) == resolution ) shift = 7;
     digitalWrite(updw, HIGH);
   }
 

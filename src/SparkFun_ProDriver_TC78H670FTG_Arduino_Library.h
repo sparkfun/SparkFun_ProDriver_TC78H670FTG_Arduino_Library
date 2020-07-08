@@ -30,6 +30,8 @@
 #ifndef _SPARKFUN_PRODRIVER_TC78H670FTG_ARDUINO_LIBRARY_H
 #define _SPARKFUN_PRODRIVER_TC78H670FTG_ARDUINO_LIBRARY_H
 
+#include <stdint.h>
+
 // default Arduino digital pin numbers
 #define PRODRIVER_DEFAULT_PIN_MODE_0 0
 #define PRODRIVER_DEFAULT_PIN_MODE_1 1
@@ -106,13 +108,14 @@ public:
 	//Constructor generates default PRODRIVERSettings.
   PRODRIVER( void );
 
-  boolean begin( void ); // Call to apply PRODRIVERSettings and returns ERR stat
-  boolean errorStat( void );
-  boolean step(uint16_t steps = 0, boolean direction = 0); // returns ERR stat
-  boolean changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
+  bool begin( void ); // Call to apply PRODRIVERSettings and returns ERR stat
+  bool errorStat( void );
+  bool step(uint16_t steps = 0, bool direction = 0); // returns ERR stat
+  bool changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
+  bool controlModeSelect( void );
 
 private:
-  boolean pinSetup();
+  bool pinSetup();
 };
 
 #endif

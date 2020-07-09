@@ -6,9 +6,11 @@
   License: MIT. See license file for more information but you can
   basically do whatever you want with this code.
 
-  This example does a custom setup (variable resolution) 
-  and turns the motor at different resolutions.
-  
+  This example does a custom setup (variable resolution 1:1 <--> 1:8)
+  and wags the motor at different resolutions.
+  It changes from FULL to 1/2 to 1/4 to 1/8 and back again
+  during normal stepping operations.
+
   Feel like supporting open source hardware?
   Buy a board from SparkFun! https://www.sparkfun.com/products/16836
 
@@ -30,20 +32,20 @@ PRODRIVER myProDriver; //Create instance of this object
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("SparkFun ProDriver TC78H670FTG Example 3");
+  Serial.println("SparkFun ProDriver TC78H670FTG Example 4");
 
   //***** Configure the ProDriver's Settings *****//
   // Note, we must change settings BEFORE calling the .begin() function.
-  // For this example, we will try variable 1/2 step resolution.
-  // This means we can turn the motor at full step resolution or 1/2 step resolution.
-  // And we can change between these two resolutions during operation.
-  myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_2; // 1:1 <--> 1:2
+  // For this example, we will try variable 1/8 step resolution.
+  // This means we can turn the motor at full 1/2, 1/4 or 1/8 step resolution.
+  // And we can change between these resolutions during operation.
 
   // The following lines of code are other options you can try out.
-  // Comment-out the above settings declaration, and uncomment your desired setting below.
+  // Comment-out/uncomment as need to select your desired setting below.
+  
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_2; // 1:1 <--> 1:2
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_4; // 1:1 <--> 1:4
-  // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_8; // 1:1 <--> 1:8
+  myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_8; // 1:1 <--> 1:8
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_16; // 1:1 <--> 1:16
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_32; // 1:1 <--> 1:32
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_VARIABLE_1_64; // 1:1 <--> 1:64
@@ -54,11 +56,26 @@ void setup() {
 
 void loop() {
   myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_1); // change to step res 1:1
-  myProDriver.step(200, 0); // turn 200 steps, CW direction
-  delay(1000);
-  
+  wagMotor();
+
   myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_2); // change to step res 1:2
-  myProDriver.step(200, 1); // turn 200 steps, CCW direction, 
-  //*Note* this will be half of the above step command because we are at 1:2 step resolution
-  delay(1000);
+  wagMotor();
+
+  myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_4); // change to step res 1:4
+  wagMotor();
+
+  myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_8); // change to step res 1:8
+  wagMotor();
+
+  myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_4); // change to step res 1:4
+  wagMotor();
+
+  myProDriver.changeStepResolution(PRODRIVER_STEP_RESOLUTION_1_2); // change to step res 1:2
+  wagMotor();
+}
+
+void wagMotor( void )
+{
+  myProDriver.step(200, 0); // turn 200 steps, CCW direction,
+  myProDriver.step(200, 1); // turn 200 steps, CCW direction
 }

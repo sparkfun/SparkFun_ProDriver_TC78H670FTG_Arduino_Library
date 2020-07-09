@@ -14,13 +14,13 @@
   Hardware Connections:
 
   ARDUINO --> PRODRIVER
-  D0 --> MODE0
-  D1 --> MODE1
-  D2 --> MODE2
+  D8 --> STBY
+  D7 --> EN
+  D6 --> MODE0
+  D5 --> MODE1
+  D4 --> MODE2
   D3 --> MODE3
-  D4 --> EN
-  D5 --> STBY
-  D6 --> ERR
+  D2 --> ERR
 
 */
 

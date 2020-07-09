@@ -45,6 +45,7 @@ PRODRIVER::PRODRIVER( void )
 	//Select control mode
 	settings.controlMode = PRODRIVER_MODE_CLOCKIN; // PRODRIVER_MODE_CLOCKIN or PRODRIVER_MODE_SERIAL
 	settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_FIXED_FULL; // many options, see header file or ds pg 8
+  settings.stepResolution = PRODRIVER_STEP_RESOLUTION_1_1; // IC default on bootup
   
   //Select default arduino pin numbers for hardware connections
 	settings.mode0Pin =   PRODRIVER_DEFAULT_PIN_MODE_0;
@@ -184,7 +185,7 @@ bool PRODRIVER::errorStat( void )
 // will stop if error is detected during stepping
 // retuns errorStat()
 
-bool PRODRIVER::step( uint16_t steps, bool direction)
+bool PRODRIVER::step( uint16_t steps, bool direction, uint8_t clockDelay)
 {
   enable();
 
@@ -201,9 +202,11 @@ bool PRODRIVER::step( uint16_t steps, bool direction)
   {
     digitalWrite(settings.mode2Pin, LOW);
     delayMicroseconds(1); // even out the clock signal, error check takes about 2uSec
+    delay(clockDelay);
     digitalWrite(settings.mode2Pin, HIGH);
     // check for error
     if(errorStat() == false) return false; // error detected, exit out of here!
+    delay(clockDelay);
   }
   return errorStat();
 }
@@ -239,6 +242,7 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
   // moving from a lower resolution to a higher one (like moving from 1:1 to 1:8)
   if(resolution > settings.stepResolution) // we are moving to a higher resolution
   {
+    digitalWrite(updw, LOW);
     if ( (resolution / 2) == settings.stepResolution ) shift = 1;
     else if ( (resolution / 4) == settings.stepResolution ) shift = 2;
     else if ( (resolution / 8) == settings.stepResolution ) shift = 3;
@@ -246,9 +250,9 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
     else if ( (resolution / 32) == settings.stepResolution ) shift = 5;
     else if ( (resolution / 64) == settings.stepResolution ) shift = 6;
     else if ( (resolution / 128) == settings.stepResolution ) shift = 7;
-    digitalWrite(updw, LOW);
   }
   else{ // we are moding to lower resolution
+    digitalWrite(updw, HIGH);
     if ( (settings.stepResolution / 2) == resolution ) shift = 1;
     else if ( (settings.stepResolution / 4) == resolution ) shift = 2;
     else if ( (settings.stepResolution / 8) == resolution ) shift = 3;
@@ -256,18 +260,22 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
     else if ( (settings.stepResolution / 32) == resolution ) shift = 5;
     else if ( (settings.stepResolution / 64) == resolution ) shift = 6;
     else if ( (settings.stepResolution / 128) == resolution ) shift = 7;
-    digitalWrite(updw, HIGH);
   }
 
   // toggle clock cycles as needed to cause the right amount of "shifts" in resolution
   for(uint8_t i = 0 ; i < shift ; i++)
   {
     digitalWrite(clock, LOW);
+    delayMicroseconds(2);
     digitalWrite(clock, HIGH);
+    delayMicroseconds(2);
   }
 
   // we're finished, so let's set SET_EN back to LOW, so it doesn't look at UP-DW anymore
   digitalWrite(setEn, LOW);
+
+  // update setting member so we can compare next time we change
+  settings.stepResolution = resolution;
   
   return errorStat();
 }

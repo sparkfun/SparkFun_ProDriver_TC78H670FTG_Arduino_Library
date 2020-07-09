@@ -33,13 +33,13 @@
 #include <stdint.h>
 
 // default Arduino digital pin numbers
-#define PRODRIVER_DEFAULT_PIN_MODE_0 0
-#define PRODRIVER_DEFAULT_PIN_MODE_1 1
-#define PRODRIVER_DEFAULT_PIN_MODE_2 2
+#define PRODRIVER_DEFAULT_PIN_STBY   8
+#define PRODRIVER_DEFAULT_PIN_EN     7
+#define PRODRIVER_DEFAULT_PIN_MODE_0 6
+#define PRODRIVER_DEFAULT_PIN_MODE_1 5
+#define PRODRIVER_DEFAULT_PIN_MODE_2 4
 #define PRODRIVER_DEFAULT_PIN_MODE_3 3
-#define PRODRIVER_DEFAULT_PIN_EN     4
-#define PRODRIVER_DEFAULT_PIN_STBY   5
-#define PRODRIVER_DEFAULT_PIN_ERROR  6
+#define PRODRIVER_DEFAULT_PIN_ERROR  2 // chosen so INT is possible on most arduinos
 
 // step resolution modes. 
 // These are used to set the MODE PINS (0:3) during begin 
@@ -119,7 +119,7 @@ public:
 
   bool begin( void ); // Call to apply PRODRIVERSettings and returns ERR stat
   bool errorStat( void );
-  bool step(uint16_t steps = 0, bool direction = 0); // returns ERR stat
+  bool step(uint16_t steps = 0, bool direction = 0, uint8_t clockDelay = 2); // returns ERR stat
   bool changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
   bool controlModeSelect( void );
   bool enable( void );

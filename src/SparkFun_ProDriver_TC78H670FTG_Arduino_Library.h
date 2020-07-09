@@ -80,9 +80,25 @@
 #define PRODRIVER_STATUS_STANDBY_ON 1
 #define PRODRIVER_STATUS_STANDBY_OFF 0
 
-//  Setting options for commInterface
+//  Setting options for controlMode
 #define PRODRIVER_MODE_CLOCKIN 0 
 #define PRODRIVER_MODE_SERIAL 1
+
+// Serial control mode settings options
+#define PRODRIVER_PHASE_MINUS 0
+#define PRODRIVER_PHASE_PLUS 1
+#define PRODRIVER_TRQ_100 0x00
+#define PRODRIVER_TRQ_75 0x01
+#define PRODRIVER_TRQ_50 0x02
+#define PRODRIVER_TRQ_25 0x03
+#define PRODRIVER_OPD_OFF 0
+#define PRODRIVER_OPD_ON 1
+#define PRODRIVER_MD_FAST_37 0x00
+#define PRODRIVER_MD_FAST_75 0x01
+#define PRODRIVER_MD_FAST_50 0x02
+#define PRODRIVER_MD_FAST_100 0x03
+
+
 
 //  PRODRIVERSettings
 //
@@ -106,6 +122,16 @@ struct PRODRIVERSettings
     uint8_t errorPin;
     bool enableStatus;
     bool standbyStatus;
+
+  // Serial Mode specific settings (these are not used for CLOCKIN mode)
+    bool phaseA;
+    bool phaseB;
+    uint16_t currentLimA; // can be only 10 bits (aka 0-1023) see datasheet pg 20
+    uint16_t currentLimB; // can be only 10 bits (aka 0-1023) see datasheet pg 20
+    uint8_t torque;
+    bool openDetection;
+    uint8_t mixedDecayA;
+    uint8_t mixedDecayB;
 };
 
 class PRODRIVER
@@ -124,6 +150,7 @@ public:
   bool controlModeSelect( void );
   bool enable( void );
   bool disable( void );
+  bool sendSerialCommand( void );
 
 private:
   bool pinSetup();

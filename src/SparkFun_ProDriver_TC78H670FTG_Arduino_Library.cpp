@@ -47,6 +47,16 @@ PRODRIVER::PRODRIVER( void )
 	settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_FIXED_FULL; // many options, see header file or ds pg 8
   settings.stepResolution = PRODRIVER_STEP_RESOLUTION_1_1; // IC default on bootup
   
+  //Select default settings for SERIAL MODE specific settings
+  settings.phaseA = PRODRIVER_PHASE_PLUS;
+  settings.phaseB = PRODRIVER_PHASE_PLUS;
+  settings.currentLimA = 1023; // max
+  settings.currentLimB = 1023; // max
+  settings.torque = PRODRIVER_TRQ_100;
+  settings.openDetection = PRODRIVER_OPD_OFF;
+  settings.mixedDecayA = PRODRIVER_MD_FAST_37;
+  settings.mixedDecayB = PRODRIVER_MD_FAST_37;
+
   //Select default arduino pin numbers for hardware connections
 	settings.mode0Pin =   PRODRIVER_DEFAULT_PIN_MODE_0;
   settings.mode1Pin =   PRODRIVER_DEFAULT_PIN_MODE_1;
@@ -318,4 +328,57 @@ bool PRODRIVER::disable( void )
     settings.enableStatus = PRODRIVER_STATUS_DISABLED; // update settings so we can check as needed
   }  
   return errorStat();
+}
+
+// sendSerialCommand ( void )
+// send a single serial data command to the driver IC
+// Note, you must first adjust all of your desired settings by accessing
+// the members within PRODRIVERSetting, and then call this function
+// to actually send a fresh new command.
+bool PRODRIVER::sendSerialCommand( void )
+{
+  // first lets construct the 32 bit data package that we need to send.
+  // we will do this by taking in all of the settings and plugging them
+  // into the correct bits.
+  
+  uint32_t command = 0; // start fresh
+
+  // set the phase bits
+  command |= (settings.phaseA << 2);
+  command |= (settings.phaseB << 18);
+
+  // set the current limits
+  command |= (settings.currentLimA << 3);
+  command |= (settings.currentLimB << 19);
+
+  // set the torque bits
+  command |= (settings.torque << 29);
+
+  // set the open detection bit
+  command |= (settings.openDetection << 31);
+
+  // set the mixed decay bits
+  command |= settings.mixedDecayA; // bit 0, no shift necessary
+  command |= (settings.mixedDecayB << 16);
+
+  // write latch low
+  digitalWrite(settings.mode1Pin, LOW); // latch
+
+  // write the data 
+  for(int i = 0 ; i < 32 ; i++)
+  {
+    digitalWrite(settings.mode2Pin, HIGH); // clock
+    delayMicroseconds(2);
+    digitalWrite(settings.mode0Pin, bitRead(command, i)); // data
+    digitalWrite(settings.mode2Pin, LOW); // clock
+    delayMicroseconds(2);
+  }
+
+  // write latch high
+  digitalWrite(settings.mode1Pin, HIGH); // latch
+
+  Serial.println(command, BIN);
+  
+  return errorStat();
+
 }

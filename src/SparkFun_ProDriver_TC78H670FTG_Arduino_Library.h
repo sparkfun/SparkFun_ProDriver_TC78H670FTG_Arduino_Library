@@ -72,6 +72,13 @@
 #define PRODRIVER_STEP_RESOLUTION_1_64 64
 #define PRODRIVER_STEP_RESOLUTION_1_128 128
 
+// statuses
+// used primarily to check current status
+// and avoid re-writing a pin, which causes a toggle in arduino
+#define PRODRIVER_STATUS_ENABLED 1
+#define PRODRIVER_STATUS_DISABLED 0
+#define PRODRIVER_STATUS_STANDBY_ON 1
+#define PRODRIVER_STATUS_STANDBY_OFF 0
 
 //  Setting options for commInterface
 #define PRODRIVER_MODE_CLOCKIN 0 
@@ -97,6 +104,8 @@ struct PRODRIVERSettings
     uint8_t enablePin;
     uint8_t standbyPin;
     uint8_t errorPin;
+    bool enableStatus;
+    bool standbyStatus;
 };
 
 class PRODRIVER
@@ -113,6 +122,8 @@ public:
   bool step(uint16_t steps = 0, bool direction = 0); // returns ERR stat
   bool changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
   bool controlModeSelect( void );
+  bool enable( void );
+  bool disable( void );
 
 private:
   bool pinSetup();

@@ -54,6 +54,10 @@ PRODRIVER::PRODRIVER( void )
   settings.enablePin =  PRODRIVER_DEFAULT_PIN_EN;
   settings.standbyPin = PRODRIVER_DEFAULT_PIN_STBY;
   settings.errorPin =   PRODRIVER_DEFAULT_PIN_ERROR;
+
+  //statuses
+  settings.enableStatus = PRODRIVER_STATUS_DISABLED;  
+  settings.standbyStatus = PRODRIVER_STATUS_STANDBY_ON;
 }
 
 //Initializes the motor driver with basic settings
@@ -70,18 +74,20 @@ bool PRODRIVER::begin( void )
 // setup Arduino pins as inputs/outputs as needed, and to default settings (disabled, standby)
 bool PRODRIVER::pinSetup( void )
 {
+  // enable is active high 
+  // OUTPUT, HIGH = enabled (Must also have hardware switch set to "USER")
+  // OUTPUT, LOW = disabled (on-board pulldown will also disable)
+  // note, hardware slide switch can also over-ride this when set to position "OFF"
+  pinMode(settings.enablePin, OUTPUT);
+  digitalWrite(settings.enablePin, LOW); // disabled
+  settings.enableStatus = PRODRIVER_STATUS_DISABLED; // update settings so we can check if needed
+
   // standby is active low. 
   // OUTPUT, LOW = standby
   // OUTPUT, HIGH = not in standby
   pinMode(settings.standbyPin, OUTPUT);
   digitalWrite(settings.standbyPin, LOW); // hold in standby, until we're ready to go
-
-  // enable is active high 
-  // OUTPUT, HIGH = enabled (Must also have hardware switch set to "USER")
-  // INPUT, LOW = disabled (on-board pulldown will disable)
-  // note, hardware slide switch can also over-ride this when set to "OFF"
-  pinMode(settings.enablePin, INPUT);
-  digitalWrite(settings.enablePin, LOW); // disabled, input without pullup 
+  settings.standbyStatus = PRODRIVER_STATUS_STANDBY_ON;
 
   // error is active low 
   // This will always be an input pin (on your microcontroller)
@@ -97,6 +103,8 @@ bool PRODRIVER::pinSetup( void )
   digitalWrite(settings.mode2Pin, LOW);
   pinMode(settings.mode3Pin, OUTPUT);
   digitalWrite(settings.mode3Pin, LOW);      
+
+  return errorStat();
 
 }
 
@@ -144,12 +152,11 @@ bool PRODRIVER::controlModeSelect( void )
 
   // release standby (write it HIGH)
   digitalWrite(settings.standbyPin, HIGH);
+  settings.standbyStatus = PRODRIVER_STATUS_STANDBY_OFF; // update setting to check as needed
 
   // wait TmodeHO (mode setting Data hold time) minimum 100 microseconds
   delayMicroseconds(100);
 
-  // engage standby (write it LOW)
-  digitalWrite(settings.standbyPin, LOW);
   return errorStat();
 }
 
@@ -179,6 +186,8 @@ bool PRODRIVER::errorStat( void )
 
 bool PRODRIVER::step( uint16_t steps, bool direction)
 {
+  enable();
+
   // set CW-CWW pin (aka mode3Pin) to the desired direction
   // CW-CCW pin controls the rotation direction of the motor. 
   // When set to H, the current of OUT_A is output first, with a phase difference of 90°. 
@@ -191,6 +200,7 @@ bool PRODRIVER::step( uint16_t steps, bool direction)
   for(uint16_t i = 0 ; i < steps ; i++)
   {
     digitalWrite(settings.mode2Pin, LOW);
+    delayMicroseconds(1); // even out the clock signal, error check takes about 2uSec
     digitalWrite(settings.mode2Pin, HIGH);
     // check for error
     if(errorStat() == false) return false; // error detected, exit out of here!
@@ -259,5 +269,45 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
   // we're finished, so let's set SET_EN back to LOW, so it doesn't look at UP-DW anymore
   digitalWrite(setEn, LOW);
   
+  return errorStat();
+}
+
+// enable ( void )
+// sets the enable pin to HIGH
+// but only if we need to (i.e. we are currently disabled)
+bool PRODRIVER::enable( void )
+{
+  // Check to see if we are already enabled. If so, then leave pin alone.
+  // If we are not enabled, then enable.
+  if(settings.enableStatus == PRODRIVER_STATUS_ENABLED)
+  {
+    // do nothing, we are already enabled.
+    // this helps avoid re-writing the enable pin
+    // which actually toggles the pin when you do a digitalWrite()
+  }
+  else{ // we are not enabled, so let's enable
+    digitalWrite(settings.enablePin, HIGH);
+    settings.enableStatus = PRODRIVER_STATUS_ENABLED; // update settings so we can check as needed
+  }
+  return errorStat();
+}
+
+// diable( void )
+// sets the enable pin to LOW
+// but only if we need to (i.e. we are currently enabled)
+bool PRODRIVER::disable( void )
+{
+  // Check to see if we are already disabled. If so, then leave pin alone.
+  // If we are not disabled, then disable.
+  if(settings.enableStatus == PRODRIVER_STATUS_DISABLED)
+  {
+    // do nothing, we are already disabled.
+    // this helps avoid re-writing the enable pin
+    // which actually toggles the pin when you do a digitalWrite()
+  }
+  else{ // we are not disabled, so let's disable
+    digitalWrite(settings.enablePin, LOW);
+    settings.enableStatus = PRODRIVER_STATUS_DISABLED; // update settings so we can check as needed
+  }  
   return errorStat();
 }

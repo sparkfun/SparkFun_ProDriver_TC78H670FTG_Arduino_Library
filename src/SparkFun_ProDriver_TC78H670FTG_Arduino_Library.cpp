@@ -361,23 +361,26 @@ bool PRODRIVER::sendSerialCommand( void )
   command |= settings.mixedDecayA; // bit 0, no shift necessary
   command |= (settings.mixedDecayB << 16);
 
-  // write latch low
-  digitalWrite(settings.mode1Pin, LOW); // latch
+
 
   // write the data 
   for(int i = 0 ; i < 32 ; i++)
   {
     digitalWrite(settings.mode2Pin, HIGH); // clock
-    delayMicroseconds(2);
+    delayMicroseconds(1);
     digitalWrite(settings.mode0Pin, bitRead(command, i)); // data
+    delayMicroseconds(1);
     digitalWrite(settings.mode2Pin, LOW); // clock
-    delayMicroseconds(2);
+    delayMicroseconds(1);
   }
 
-  // write latch high
+  // write latch high, then low
   digitalWrite(settings.mode1Pin, HIGH); // latch
+  delayMicroseconds(1);
+  digitalWrite(settings.mode1Pin, LOW); // latch
+  delayMicroseconds(1);
 
-  Serial.println(command, BIN);
+  //Serial.println(command, BIN);
   
   return errorStat();
 

@@ -47,7 +47,7 @@ void setup() {
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_FIXED_1_64; // 1/64 step
   // myProDriver.settings.stepResolutionMode = PRODRIVER_STEP_RESOLUTION_FIXED_1_128; // 1/128 step
 
-  myProDriver.begin(); // default settings
+  myProDriver.begin(); // adjust custom settings before calling this
 }
 
 void loop() {

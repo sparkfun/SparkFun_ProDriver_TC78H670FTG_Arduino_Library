@@ -132,6 +132,7 @@ struct PRODRIVERSettings
     bool openDetection;
     uint8_t mixedDecayA;
     uint8_t mixedDecayB;
+    uint8_t phasePosition; // Used to keep track of phaseA/B to allow single steps in either direction
 };
 
 class PRODRIVER
@@ -146,14 +147,17 @@ public:
   bool begin( void ); // Call to apply PRODRIVERSettings and returns ERR stat
   bool errorStat( void );
   bool step(uint16_t steps = 0, bool direction = 0, uint8_t clockDelay = 2); // returns ERR stat
+  bool stepSerial(uint16_t steps, bool direction = 0, uint8_t stepDelay = 2); // only 1:1 stepping, (no microstep support)
   bool changeStepResolution(uint8_t resolution = PRODRIVER_STEP_RESOLUTION_1_1); // only works with "variable" step modes
   bool controlModeSelect( void );
   bool enable( void );
   bool disable( void );
   bool sendSerialCommand( void );
 
+
 private:
   bool pinSetup();
+  bool stepSerialSingle(bool direction);
 };
 
 #endif

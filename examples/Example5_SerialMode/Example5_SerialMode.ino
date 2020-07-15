@@ -7,6 +7,7 @@
   basically do whatever you want with this code.
 
   This example does a custom setup (controlMode:SERIAL) and turns the motor back and forth.
+  Note, only full step (aka 1:1) control is supported via serial mode. No microstepping.
 
   Feel like supporting open source hardware?
   Buy a board from SparkFun! https://www.sparkfun.com/products/16836
@@ -32,71 +33,13 @@ void setup() {
   Serial.begin(115200);
   Serial.println("SparkFun ProDriver TC78H670FTG Example 5");
 
-  myProDriver.settings.controlMode = PRODRIVER_MODE_SERIAL;
+  myProDriver.settings.controlMode = PRODRIVER_MODE_SERIAL; // non-default mode must be set here
   myProDriver.begin(); // adjust custom settings before calling this
 }
 
 void loop() {
-  stepSerial(50); // turn 200 steps
+  myProDriver.stepSerial(200, 0); // turn 200 steps, CW direction
   delay(1000);
-  stepSerialCCW(50); // turn 200 steps
+  myProDriver.stepSerial(200, 1); // turn 200 steps, CCW direction
   delay(1000);
-}
-
-void stepSerial( uint8_t steps)
-{
-  myProDriver.enable(); // in serial mode, we must call enable here, 
-  // before we start commanding current/phase of each coil
-
-  for (uint16_t i = 0 ; i < steps ; i++)
-  {
-    myProDriver.settings.phaseA = 1;
-    myProDriver.settings.phaseB = 1;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 0;
-    myProDriver.settings.phaseB = 1;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 0;
-    myProDriver.settings.phaseB = 0;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 1;
-    myProDriver.settings.phaseB = 0;
-    myProDriver.sendSerialCommand();
-    delay(2);
-  }
-}
-
-void stepSerialCCW( uint8_t steps)
-{
-  myProDriver.enable(); // in serial mode, we must call enable here, 
-  // before we start commanding current/phase of each coil
-
-  for (uint16_t i = 0 ; i < steps ; i++)
-  {
-    myProDriver.settings.phaseA = 1;
-    myProDriver.settings.phaseB = 1;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 1;
-    myProDriver.settings.phaseB = 0;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 0;
-    myProDriver.settings.phaseB = 0;
-    myProDriver.sendSerialCommand();
-    delay(2);
-
-    myProDriver.settings.phaseA = 0;
-    myProDriver.settings.phaseB = 1;
-    myProDriver.sendSerialCommand();
-    delay(2);
-  }
 }

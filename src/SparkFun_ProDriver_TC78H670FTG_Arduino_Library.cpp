@@ -56,6 +56,7 @@ PRODRIVER::PRODRIVER( void )
   settings.openDetection = PRODRIVER_OPD_OFF;
   settings.mixedDecayA = PRODRIVER_MD_FAST_37;
   settings.mixedDecayB = PRODRIVER_MD_FAST_37;
+  settings.phasePosition = 1;
 
   //Select default arduino pin numbers for hardware connections
 	settings.mode0Pin =   PRODRIVER_DEFAULT_PIN_MODE_0;
@@ -191,6 +192,7 @@ bool PRODRIVER::errorStat( void )
 }
 
 // step( uint16_t steps, bool direction )
+// using CLOCKIN mode,
 // step the motor a set amount of steps at the desired direction
 // will stop if error is detected during stepping
 // retuns errorStat()
@@ -384,4 +386,77 @@ bool PRODRIVER::sendSerialCommand( void )
   
   return errorStat();
 
+}
+
+// stepSerial( uint16_t steps, bool direction, uint8_t stepDelay )
+// using SERIAL mode,
+// step the motor a set amount of steps at the desired direction
+// note, only 1:1 stepping, no microstepping supported
+// will stop if error is detected during stepping
+// retuns errorStat()
+
+bool PRODRIVER::stepSerial(uint16_t steps, bool direction, uint8_t stepDelay)
+{
+  enable();
+  for(int i = 0; i < steps ; i++)
+  {
+    if(stepSerialSingle(direction) == false) return false;
+    delay(stepDelay);
+  }
+  return true;
+}
+
+
+bool PRODRIVER::stepSerialSingle(bool direction)
+{
+  // phasePosition should only be 1,2,3 or 4
+  // depending on direction, we need to increment or decrement,
+  // and roll over if we go beyond min/max
+  // EXAMPLE:
+  // to move 5 steps forward, the following phasePositions would be used in sequence:
+  // 1,2,3,4,1
+  // and then (from the last position used,1) to move 5 steps backwards, the following 
+  // phasePositions would be used:
+  // 4,3,2,1,4
+  if(direction == true)
+  {
+    settings.phasePosition++;
+    if(settings.phasePosition > 4) settings.phasePosition = 1; // roll over
+  }
+  else
+  {
+    settings.phasePosition--;
+    if(settings.phasePosition < 1) settings.phasePosition = 4; // roll over
+  }
+
+  switch (settings.phasePosition)
+  {
+  case 1:
+    settings.phaseA = 1;
+    settings.phaseB = 1;
+    return sendSerialCommand();
+    break;
+
+  case 2:
+    settings.phaseA = 0;
+    settings.phaseB = 1;
+    return sendSerialCommand();
+    break;
+
+  case 3:
+    settings.phaseA = 0;
+    settings.phaseB = 0;
+    return sendSerialCommand();
+    break;
+
+  case 4:
+    settings.phaseA = 1;
+    settings.phaseB = 0;
+    return sendSerialCommand();
+    break;        
+
+  default:
+    return false;
+    break;
+  }
 }

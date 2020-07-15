@@ -18,6 +18,7 @@ errorStat	KEYWORD2
 step	KEYWORD2
 changeStepResolution	KEYWORD2
 controlModeSelect	KEYWORD2
+stepSerial	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

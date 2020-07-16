@@ -460,3 +460,35 @@ bool PRODRIVER::stepSerialSingle(bool direction)
     break;
   }
 }
+
+// setTorque( uint8_t newTorque )
+// This is simply a wrapper function to set desired torque setting
+// Note, this will only take effect on the motor driver when sendSerialCommand() is called.
+// Valid torque options include the following:
+// PRODRIVER_TRQ_100 (default set in constructor)
+// PRODRIVER_TRQ_75
+// PRODRIVER_TRQ_50
+// PRODRIVER_TRQ_25
+bool PRODRIVER::setTorque( uint8_t newTorque )
+{
+  settings.torque = newTorque;
+  return true;
+}
+
+// setCurrentLimit( uint16_t currentLimit )
+// This is simply a wrapper function to set desired current limit setting
+// Note, this effects current limit on both coils (A and B)
+// Note, this will only take effect on the motor driver when sendSerialCommand() is called.
+// currentLimit is a 10-bit value, so must be 0-1023
+// currentLimit is a percentage of VREF and also limited by torque setting.
+bool PRODRIVER::setCurrentLimit( uint16_t currentLimit )
+{
+  if( (currentLimit < 0) || (currentLimit > 1023) ) // protect against invalid user inputs
+  {
+    // do nothing, user input is outside of valid range
+    return false;
+  }
+  settings.currentLimA = currentLimit;
+  settings.currentLimB = currentLimit;
+  return true;
+}

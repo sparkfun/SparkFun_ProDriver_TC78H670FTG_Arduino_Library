@@ -153,6 +153,8 @@ public:
   bool enable( void );
   bool disable( void );
   bool sendSerialCommand( void );
+  bool setTorque( uint8_t newTorque );
+  bool setCurrentLimit( uint16_t currentLimit );
 
 
 private:

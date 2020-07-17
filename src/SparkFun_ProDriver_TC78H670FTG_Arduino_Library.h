@@ -120,6 +120,7 @@ struct PRODRIVERSettings
     uint8_t enablePin;
     uint8_t standbyPin;
     uint8_t errorPin;
+    bool errorFlag; // true = error, false = no error
     bool enableStatus;
     bool standbyStatus;
 

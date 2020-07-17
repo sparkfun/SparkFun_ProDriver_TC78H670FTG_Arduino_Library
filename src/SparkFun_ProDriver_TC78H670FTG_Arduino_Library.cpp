@@ -67,9 +67,10 @@ PRODRIVER::PRODRIVER( void )
   settings.standbyPin = PRODRIVER_DEFAULT_PIN_STBY;
   settings.errorPin =   PRODRIVER_DEFAULT_PIN_ERROR;
 
-  //statuses
+  //statuses/flags
   settings.enableStatus = PRODRIVER_STATUS_DISABLED;  
   settings.standbyStatus = PRODRIVER_STATUS_STANDBY_ON;
+  settings.errorFlag = false; // false = no error
 }
 
 //Initializes the motor driver with basic settings
@@ -384,8 +385,8 @@ bool PRODRIVER::sendSerialCommand( void )
 
   //Serial.println(command, BIN);
   
-  return errorStat();
-
+  //return errorStat();
+  return true;
 }
 
 // stepSerial( uint16_t steps, bool direction, uint8_t stepDelay )
@@ -418,6 +419,10 @@ bool PRODRIVER::stepSerialSingle(bool direction)
   // and then (from the last position used,1) to move 5 steps backwards, the following 
   // phasePositions would be used:
   // 4,3,2,1,4
+
+  // check for error
+  if(settings.errorFlag) return false;
+  
   if(direction == true)
   {
     settings.phasePosition++;

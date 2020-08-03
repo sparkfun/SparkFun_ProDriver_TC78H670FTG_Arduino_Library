@@ -134,9 +134,13 @@ bool PRODRIVER::controlModeSelect( void )
   {
   case PRODRIVER_MODE_SERIAL:
     // set mode pins to all LOW for serial mode
+    pinMode(settings.mode0Pin, OUTPUT);
     digitalWrite(settings.mode0Pin, LOW);
+    pinMode(settings.mode1Pin, OUTPUT);
     digitalWrite(settings.mode1Pin, LOW);
+    pinMode(settings.mode2Pin, OUTPUT);
     digitalWrite(settings.mode2Pin, LOW);
+    pinMode(settings.mode3Pin, OUTPUT);
     digitalWrite(settings.mode3Pin, LOW);     
     break;
 
@@ -149,10 +153,45 @@ bool PRODRIVER::controlModeSelect( void )
     // grab "bits" from the desired step resolution
     // these will be used to set each mode pin high/low
 
-    digitalWrite(settings.mode0Pin, bitRead(settings.stepResolutionMode, 0));
-    digitalWrite(settings.mode1Pin, bitRead(settings.stepResolutionMode, 1));
-    digitalWrite(settings.mode2Pin, bitRead(settings.stepResolutionMode, 2));
-    digitalWrite(settings.mode3Pin, bitRead(settings.stepResolutionMode, 3));
+    // mode0Pin
+    if(bitRead(settings.stepResolutionMode, 0))
+    {
+      pinMode(settings.mode0Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+    }
+    else{
+      pinMode(settings.mode0Pin, OUTPUT);
+      digitalWrite(settings.mode0Pin, LOW);
+    }
+
+    // mode1Pin
+    if(bitRead(settings.stepResolutionMode, 1))
+    {
+      pinMode(settings.mode1Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+    }
+    else{
+      pinMode(settings.mode1Pin, OUTPUT);
+      digitalWrite(settings.mode1Pin, LOW);
+    }    
+
+    // mode2Pin
+    if(bitRead(settings.stepResolutionMode, 2))
+    {
+      pinMode(settings.mode2Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+    }
+    else{
+      pinMode(settings.mode2Pin, OUTPUT);
+      digitalWrite(settings.mode2Pin, LOW);
+    }        
+
+    // mode3Pin
+    if(bitRead(settings.stepResolutionMode, 3))
+    {
+      pinMode(settings.mode3Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+    }
+    else{
+      pinMode(settings.mode3Pin, OUTPUT);
+      digitalWrite(settings.mode3Pin, LOW);
+    }        
     break;
 
   default:
@@ -206,17 +245,25 @@ bool PRODRIVER::step( uint16_t steps, bool direction, uint8_t clockDelay)
   // CW-CCW pin controls the rotation direction of the motor. 
   // When set to H, the current of OUT_A is output first, with a phase difference of 90°. 
   // When set to L, the current of OUT_B is output first with a phase difference of 90°
-  digitalWrite(settings.mode3Pin, direction);
+  if(direction == true)
+  {
+    pinMode(settings.mode3Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+  }
+  else{
+    pinMode(settings.mode3Pin, OUTPUT);
+    digitalWrite(settings.mode3Pin, LOW);
+  }
   
   // step the motor the desired amount of steps
   // each up-edge of the CLK signal (aka mode2Pin) 
   // will shift the motor's electrical angle per step.
   for(uint16_t i = 0 ; i < steps ; i++)
   {
+    pinMode(settings.mode2Pin, OUTPUT);
     digitalWrite(settings.mode2Pin, LOW);
     delayMicroseconds(1); // even out the clock signal, error check takes about 2uSec
     delay(clockDelay);
-    digitalWrite(settings.mode2Pin, HIGH);
+    pinMode(settings.mode2Pin, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
     // check for error
     if(errorStat() == false) return false; // error detected, exit out of here!
     delay(clockDelay);
@@ -242,9 +289,9 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
   uint8_t updw = settings.mode0Pin;
   uint8_t clock = settings.mode2Pin;
 
-  // setup pins for a new step resolution change
-    digitalWrite(clock, HIGH);
-    digitalWrite(setEn, HIGH);
+  // setup pins for a new step resolution change. Both need to be pulled HIGH
+    pinMode(clock, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
+    pinMode(setEn, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
 
   // find out how many shifts we need in either direction.
   uint8_t shift = 0;
@@ -255,6 +302,7 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
   // moving from a lower resolution to a higher one (like moving from 1:1 to 1:8)
   if(resolution > settings.stepResolution) // we are moving to a higher resolution
   {
+    pinMode(updw, OUTPUT);
     digitalWrite(updw, LOW);
     if ( (resolution / 2) == settings.stepResolution ) shift = 1;
     else if ( (resolution / 4) == settings.stepResolution ) shift = 2;
@@ -265,7 +313,7 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
     else if ( (resolution / 128) == settings.stepResolution ) shift = 7;
   }
   else{ // we are moding to lower resolution
-    digitalWrite(updw, HIGH);
+    pinMode(updw, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
     if ( (settings.stepResolution / 2) == resolution ) shift = 1;
     else if ( (settings.stepResolution / 4) == resolution ) shift = 2;
     else if ( (settings.stepResolution / 8) == resolution ) shift = 3;
@@ -278,13 +326,15 @@ bool PRODRIVER::changeStepResolution( uint8_t resolution)
   // toggle clock cycles as needed to cause the right amount of "shifts" in resolution
   for(uint8_t i = 0 ; i < shift ; i++)
   {
+    pinMode(clock, OUTPUT);
     digitalWrite(clock, LOW);
     delayMicroseconds(2);
-    digitalWrite(clock, HIGH);
+    pinMode(clock, INPUT); // let on-board external pullup to 3.3V pull this pin HIGH
     delayMicroseconds(2);
   }
 
   // we're finished, so let's set SET_EN back to LOW, so it doesn't look at UP-DW anymore
+  pinMode(setEn, OUTPUT);
   digitalWrite(setEn, LOW);
 
   // update setting member so we can compare next time we change
@@ -348,38 +398,47 @@ bool PRODRIVER::sendSerialCommand( void )
 
   // set the phase bits
   command |= (settings.phaseA << 2);
-  command |= (settings.phaseB << 18);
+  command |= ((uint32_t)settings.phaseB << 18);
 
   // set the current limits
   command |= (settings.currentLimA << 3);
-  command |= (settings.currentLimB << 19);
+  command |= ((uint32_t)settings.currentLimB << 19);
 
   // set the torque bits
-  command |= (settings.torque << 29);
+  command |= ((uint32_t)settings.torque << 29);
 
   // set the open detection bit
-  command |= (settings.openDetection << 31);
+  command |= ((uint32_t)settings.openDetection << 31);
 
   // set the mixed decay bits
   command |= settings.mixedDecayA; // bit 0, no shift necessary
-  command |= (settings.mixedDecayB << 16);
+  command |= ((uint32_t)settings.mixedDecayB << 16);
 
 
 
   // write the data 
   for(int i = 0 ; i < 32 ; i++)
   {
-    digitalWrite(settings.mode2Pin, HIGH); // clock
+    pinMode(settings.mode2Pin, INPUT); // clock "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
     delayMicroseconds(1);
-    digitalWrite(settings.mode0Pin, bitRead(command, i)); // data
+    if(bitRead(command, i))
+    {
+      pinMode(settings.mode0Pin, INPUT); // data "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
+    }
+    else{
+      pinMode(settings.mode0Pin, OUTPUT); // data LOW
+      digitalWrite(settings.mode0Pin, LOW); // data LOW
+    }
     delayMicroseconds(1);
+    pinMode(settings.mode2Pin, OUTPUT); // clock
     digitalWrite(settings.mode2Pin, LOW); // clock
     delayMicroseconds(1);
   }
 
-  // write latch high, then low
-  digitalWrite(settings.mode1Pin, HIGH); // latch
+  // write latch "high", then low
+  pinMode(settings.mode1Pin, INPUT); // latch "HIGH". let on-board external pullup to 3.3V pull this pin HIGH  
   delayMicroseconds(1);
+  pinMode(settings.mode1Pin, OUTPUT); // latch
   digitalWrite(settings.mode1Pin, LOW); // latch
   delayMicroseconds(1);
 

@@ -31,7 +31,7 @@
   D2 --> ERR    PRODRIVER1 and PRODRIVER2
 
   ARDUINO --> PRODRIVER2
-  D9 --> MODE2 ***PRODRIVER2 onlyl***       (LATCH PIN 2)
+  D9 --> MODE1 ***PRODRIVER2 only***       (LATCH PIN 2)
 
 
 */

@@ -19,7 +19,7 @@ Repository Contents
 
 Documentation
 --------------
-* **[SparkFun ProDriver Hookup Guide](https://learn.sparkfun.com/tutorials/toshiba-stepper-motor-driver-prodriver)** - Hookup guide for the SparkFun ProDriver
+* **[SparkFun ProDriver Hookup Guide](https://learn.sparkfun.com/tutorials/sparkfun-prodriver-hookup-guide)** - Hookup guide for the SparkFun ProDriver
 * **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
 * **[Product Repository](https://github.com/sparkfun/SparkFun_ProDriver_TC78H670FTG)** - Main repository (including hardware files)
 

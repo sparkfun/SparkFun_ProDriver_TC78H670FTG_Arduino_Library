@@ -134,6 +134,7 @@ struct PRODRIVERSettings
     uint8_t mixedDecayA;
     uint8_t mixedDecayB;
     uint8_t phasePosition; // Used to keep track of phaseA/B to allow single steps in either direction
+    bool fastSerialMode; // only use with 3.3V logic
 };
 
 class PRODRIVER

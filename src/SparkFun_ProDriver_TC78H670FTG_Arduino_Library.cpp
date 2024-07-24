@@ -57,6 +57,7 @@ PRODRIVER::PRODRIVER( void )
   settings.mixedDecayA = PRODRIVER_MD_FAST_37;
   settings.mixedDecayB = PRODRIVER_MD_FAST_37;
   settings.phasePosition = 1;
+  settings.fastSerialMode = false; // default to false
 
   //Select default arduino pin numbers for hardware connections
 	settings.mode0Pin =   PRODRIVER_DEFAULT_PIN_MODE_0;
@@ -414,33 +415,58 @@ bool PRODRIVER::sendSerialCommand( void )
   command |= settings.mixedDecayA; // bit 0, no shift necessary
   command |= ((uint32_t)settings.mixedDecayB << 16);
 
-
-
   // write the data 
-  for(int i = 0 ; i < 32 ; i++)
+  // check for fast serial mode
+  if(settings.fastSerialMode == true)
   {
-    pinMode(settings.mode2Pin, INPUT); // clock "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
-    delayMicroseconds(1);
-    if(bitRead(command, i))
+    pinMode(settings.mode0Pin, OUTPUT);
+    pinMode(settings.mode1Pin, OUTPUT);
+    pinMode(settings.mode2Pin, OUTPUT);
+    for(int i = 0 ; i < 32 ; i++)
     {
-      pinMode(settings.mode0Pin, INPUT); // data "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
+      digitalWrite(settings.mode2Pin, HIGH); // clock
+      if(bitRead(command, i))
+      {
+        digitalWrite(settings.mode0Pin, HIGH); // data
+      }
+      else{
+        digitalWrite(settings.mode0Pin, LOW); // data
+      }
+      digitalWrite(settings.mode2Pin, LOW); // clock
     }
-    else{
-      pinMode(settings.mode0Pin, OUTPUT); // data LOW
-      digitalWrite(settings.mode0Pin, LOW); // data LOW
-    }
+
+    // write latch "high", then low
+    digitalWrite(settings.mode1Pin, HIGH); // latch "HIGH". let on-board external pullup to 3.3V pull this pin HIGH  
     delayMicroseconds(1);
-    pinMode(settings.mode2Pin, OUTPUT); // clock
-    digitalWrite(settings.mode2Pin, LOW); // clock
+    digitalWrite(settings.mode1Pin, LOW); // latch
     delayMicroseconds(1);
   }
+  else{
+    for(int i = 0 ; i < 32 ; i++)
+    {
+      pinMode(settings.mode2Pin, INPUT); // clock "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
+      delayMicroseconds(1);
+      if(bitRead(command, i))
+      {
+        pinMode(settings.mode0Pin, INPUT); // data "HIGH". let on-board external pullup to 3.3V pull this pin HIGH
+      }
+      else{
+        pinMode(settings.mode0Pin, OUTPUT); // data LOW
+        digitalWrite(settings.mode0Pin, LOW); // data LOW
+      }
+      delayMicroseconds(1);
+      pinMode(settings.mode2Pin, OUTPUT); // clock
+      digitalWrite(settings.mode2Pin, LOW); // clock
+      delayMicroseconds(1);
+    }
 
-  // write latch "high", then low
-  pinMode(settings.mode1Pin, INPUT); // latch "HIGH". let on-board external pullup to 3.3V pull this pin HIGH  
-  delayMicroseconds(1);
-  pinMode(settings.mode1Pin, OUTPUT); // latch
-  digitalWrite(settings.mode1Pin, LOW); // latch
-  delayMicroseconds(1);
+    // write latch "high", then low
+    pinMode(settings.mode1Pin, INPUT); // latch "HIGH". let on-board external pullup to 3.3V pull this pin HIGH  
+    delayMicroseconds(1);
+    pinMode(settings.mode1Pin, OUTPUT); // latch
+    digitalWrite(settings.mode1Pin, LOW); // latch
+    delayMicroseconds(1);
+  }
 
   //Serial.println(command, BIN);
   

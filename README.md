@@ -3,7 +3,7 @@ SparkFun ProDriver TC78H670FTG Arduino Library
 
 | ![SparkFun ProDriver - Stepper Motor Driver (TC78H670FTG)](https://cdn.sparkfun.com//assets/parts/1/5/7/5/7/16836-SparkFun_ProDriver_-_Stepper_Motor_Driver__TC78H670FTG_-01a.jpg) | ![SparkFun Mini Stepper Motor Driver - TC78H670FTG](https://cdn.sparkfun.com//assets/parts/2/5/6/5/6/ROB-25167-Stepper-Motor-Carrier-Feature.jpg) |
 | :---: | :---: |
-| [*SparkFun ProDriver - Stepper Motor Driver (TC78H670FTG) (ROB-16836)*](https://www.sparkfun.com/products/16836) | [*SparkFun Mini Stepper Motor Driver - TC78H670FTG (ROB-25167)*](https://sparkle.sparkfun.com/sparkle/products/25167) |
+| [*SparkFun ProDriver - Stepper Motor Driver (TC78H670FTG) (ROB-16836)*](https://www.sparkfun.com/products/16836) | [*SparkFun Mini Stepper Motor Driver - TC78H670FTG (ROB-25167)*](https://wwww.sparkfun.com/products/25167) |
 
 The SparkFun ProDriver and Mini Stepper Motor Driver make it easy to start developing with the TC78H670FTG bipolar stepper motor driver from Toshiba! On the ProDriver, the latch terminals provide instant solder-less connections to every feature offered. Meanwhile, the compact layout of the Mini Stepper Motor Driver is perfect for prototyping on breadboards. Use our extensive Arduino Library with 10 examples, and you can quickly explore the many features of this precise and small package size motor driver IC.
 
